@@ -5,8 +5,7 @@ import { TableList } from '@/app/components/table'
 import { Typography } from '@mui/material'
 import { SkeletonCustom } from '@/app/components/skeleton'
 
-export const HomeC: React.FC<any> = ({ dataSeller, products, get_products_by_category }) => {
-    console.log(dataSeller, '🎶🎶🎶')
+export const HomeC: React.FC<any> = ({ children, dataSeller, get_products_by_category }) => {
     const arrayVariants = [
         { variant: 'rectangular', width: '100%', height: 40, sx: {} }
     ]
@@ -26,7 +25,9 @@ export const HomeC: React.FC<any> = ({ dataSeller, products, get_products_by_cat
                         <SkeletonCustom arrayVariant={arrayVariants.concat([...arrayVariants, ...arrayVariants])} />
                     }
                 </div>
-                <div className='w-84p bg-white p-2'><TableList rows={products} /></div>
+                <div className='w-84p bg-white p-2'>
+                    {children}
+                </div>
             </div>
         </div>
     )

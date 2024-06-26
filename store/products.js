@@ -10,14 +10,17 @@ export const UseStoreProducts = create(
         (set, get) => ({
             SELLER_ID: 179571326,
             products: [],
+            isLoadingProduct: false,
             updateProducts: (products) => {
                 set({ products })
             },
             getProductsByCategory: async (category_id) => {
                 const { SELLER_ID } = get()
+                set({ isLoadingProduct: true })
                 const data = await apiClient.get(`sites/MLA/search?seller_id=${SELLER_ID}&category=${category_id}`)
                 set({ products: data?.results })
-                console.log(data, '😊😊😊😊😊')
+                set({ isLoadingProduct: false })
+                return data?.results
             }
         }),
         {

@@ -10,7 +10,9 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { styled } from '@mui/material/styles';
 import Image from 'next/image';
-import { Link } from '@mui/material';
+import { Link, Typography } from '@mui/material';
+import { SkeletonCustom } from './skeleton';
+import LinearProgress from '@mui/material/LinearProgress';
 
 interface Column {
     id: 'id' | 'title' | 'price' | 'permalink' | 'thumbnail';
@@ -54,9 +56,9 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderBottom: `2px solid ${theme.palette.divider}`,
 }));
 
-export const TableList: React.FC<any> = ({ rows }) => {
+export const TableList: React.FC<any> = ({ rows, isLoading }) => {
     const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(25);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const handleChangePage = (event: unknown, newPage: number) => {
         setPage(newPage);
@@ -85,24 +87,30 @@ export const TableList: React.FC<any> = ({ rows }) => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {rows
-                            ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            .map((row: any) => {
-                                return (
-                                    <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
-                                        {columns.map((column) => {
-                                            const value = row[column.id];
-                                            return (
-                                                <TableCell key={column.id} align={'center'}>
-                                                    {column.format
-                                                        ? column.format(value)
-                                                        : value}
-                                                </TableCell>
-                                            );
-                                        })}
-                                    </TableRow>
-                                );
-                            })}
+                        {isLoading ? <TableRow hover role="checkbox" tabIndex={-1}>
+                            <TableCell align={'center'} colSpan={5}><LinearProgress /></TableCell>
+                        </TableRow>
+                            : !rows?.length ? <TableRow hover role="checkbox" tabIndex={-1}>
+                                <TableCell align={'center'} colSpan={5}> <Typography variant='h6'>No hay productos para mostrar</Typography></TableCell>
+                            </TableRow>
+                                : rows
+                                    ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                    .map((row: any) => {
+                                        return (
+                                            <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                                                {columns.map((column) => {
+                                                    const value = row[column.id];
+                                                    return (
+                                                        <TableCell key={column.id} align={'center'}>
+                                                            {column.format
+                                                                ? column.format(value)
+                                                                : value}
+                                                        </TableCell>
+                                                    );
+                                                })}
+                                            </TableRow>
+                                        );
+                                    })}
                     </TableBody>
                 </Table>
             </TableContainer>
