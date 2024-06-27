@@ -1,5 +1,5 @@
 'use client';
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -10,17 +10,21 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { styled } from '@mui/material/styles';
 import Image from 'next/image';
-import { Link, Typography } from '@mui/material';
-import { SkeletonCustom } from './skeleton';
+import { Box, InputAdornment, Link, TextField, Typography } from '@mui/material';
 import LinearProgress from '@mui/material/LinearProgress';
+import { ProductData, ProductItem } from '../types/productType';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
+import { SelectCustom } from './select';
 
 interface Column {
     id: 'id' | 'title' | 'price' | 'permalink' | 'thumbnail';
     label: string;
     minWidth?: number;
     align?: 'right' | 'center' | 'left';
-    format?: (value: any) => any;
+    format?: ((value: unknown | string | number) => string | null) | any
 }
+
+const escapeRegExp = (value: any) => value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
 const columns: readonly Column[] = [
     { id: 'id', label: 'Producto Id', minWidth: 170, align: 'center' },
@@ -37,28 +41,30 @@ const columns: readonly Column[] = [
         label: 'Mercado enlace',
         minWidth: 170,
         align: 'center',
-        format: (value: any) => <Link href={value}>{value}</Link>
+        format: (value: string) => <Link href={value} target='blank'>{value}</Link>
     },
     {
         id: 'thumbnail',
         label: 'Imagen',
         minWidth: 170,
         align: 'center',
-        format: (value: any) => < Image src={value} alt={'imagen'} width={80} height={80} className='m-auto' />
+        format: (value: string) => < Image src={value} alt={'imagen'} width={80} height={80} className='m-auto' />
     }
 ];
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    backgroundColor: '#eeeeed',
+    backgroundColor: '#E3EDFB',
     color: 'black',
     fontWeight: 'bold',
     fontSize: '1rem',
     borderBottom: `2px solid ${theme.palette.divider}`,
 }));
 
-export const TableList: React.FC<any> = ({ rows, isLoading }) => {
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
+export const TableList: React.FC<ProductData> = ({ rows: data, isLoading, available_sorts, get_sort_products }) => {
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [searchText, setSearchText] = useState('');
+    const [rows, setRows] = useState<ProductItem[]>([]);
 
     const handleChangePage = (event: unknown, newPage: number) => {
         setPage(newPage);
@@ -69,9 +75,46 @@ export const TableList: React.FC<any> = ({ rows, isLoading }) => {
         setPage(0);
     };
 
+    const requestSearch = (searchValue: string) => {
+        setSearchText(searchValue);
+        const searchRegex = new RegExp(escapeRegExp(searchValue), "i");
+        const filteredRows = data.filter((row: any) => {
+            // eslint-disable-next-line array-callback-return
+            return Object.keys(row).some((field: any) => {
+                if (row[field] !== null) {
+                    return searchRegex.test(row[field].toString());
+                }
+            });
+        });
+        setRows(filteredRows);
+    };
+
+    useEffect(() => {
+        setRows(data)
+    }, [data])
+
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-            <TableContainer sx={{ maxHeight: 650 }} className='overflow-y-auto scrollbar-custom'>
+            <Box bgcolor={'#6795D6'} className='w-full flex flex-row items-center justify-between  p-2'>
+                <Box className='w-25p flex flex-row justify-around items-center'>
+                    <Typography variant='subtitle1' className='font-bold text-white'>BUSCAR: </Typography>
+                    <TextField
+                        className='bg-white rounded'
+                        value={searchText}
+                        onChange={({ target }) => requestSearch(target.value)}
+                        size='small'
+                        InputProps={{
+                            endAdornment: (<InputAdornment position='end'>
+                                <SearchOffIcon className='cursor-pointer' onClick={() => requestSearch('')} />
+                            </InputAdornment>)
+                        }}
+                    />
+                </Box>
+                <Box className={'w-25p'}>
+                    <SelectCustom data={available_sorts} label={'Ordenar por'} handleClick={get_sort_products} />
+                </Box>
+            </Box>
+            <TableContainer sx={{ maxHeight: 380 }} className='overflow-y-auto scrollbar-custom'>
                 <Table stickyHeader aria-label="sticky table">
                     <TableHead>
                         <TableRow>
@@ -97,7 +140,7 @@ export const TableList: React.FC<any> = ({ rows, isLoading }) => {
                                     ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                     .map((row: any) => {
                                         return (
-                                            <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                                            <TableRow hover role="checkbox" tabIndex={-1} key={row.id}>
                                                 {columns.map((column) => {
                                                     const value = row[column.id];
                                                     return (
@@ -115,6 +158,7 @@ export const TableList: React.FC<any> = ({ rows, isLoading }) => {
                 </Table>
             </TableContainer>
             <TablePagination
+                labelRowsPerPage="Filas por página"
                 rowsPerPageOptions={[25, 100]}
                 component="div"
                 count={rows?.length}

@@ -39,7 +39,19 @@ export const UseStoreSeller = create(
                 if (sellerData) {
                     const seller_categories = sellerData?.available_filters?.find((x) => x?.id === 'category')?.values
                     const categories = await getSubCategory(seller_categories)
-                    set({ data_seller: { ...sellerData, categories }, isLoading: false })
+                    set({
+                        data_seller: {
+                            ...sellerData,
+                            categories: {
+                                id: 'category',
+                                name: 'Categorías',
+                                type: 'dropdown',
+                                values: categories
+                            },
+                            available_filters: sellerData?.available_filters.filter((x) => x.id !== 'category')
+                        },
+                        isLoading: false
+                    })
                     return data_seller
                 }
             }

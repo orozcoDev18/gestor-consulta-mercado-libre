@@ -12,7 +12,7 @@ export const UseStoreLayout = create(
                 const controlOpen = {}
                 controlOpen[category_id] = !controlOpenCategory[category_id]
                 set({ controlOpenCategory: { ...controlOpenCategory, ...controlOpen } })
-            }
+            },
         }),
         {
             name: encrypt_data('layout_storage'),

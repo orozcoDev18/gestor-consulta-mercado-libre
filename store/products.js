@@ -14,14 +14,31 @@ export const UseStoreProducts = create(
             updateProducts: (products) => {
                 set({ products })
             },
+            setLoadingProduct: (value) => set({ isLoadingProduct: value }),
             getProductsByCategory: async (category_id) => {
-                const { SELLER_ID } = get()
-                set({ isLoadingProduct: true })
+                const { SELLER_ID, setLoadingProduct } = get()
+                setLoadingProduct(true)
                 const data = await apiClient.get(`sites/MLA/search?seller_id=${SELLER_ID}&category=${category_id}`)
                 set({ products: data?.results })
-                set({ isLoadingProduct: false })
+                setLoadingProduct(false)
                 return data?.results
-            }
+            },
+            getFilterProducts: async (shipping) => {
+                const { SELLER_ID, setLoadingProduct } = get()
+                setLoadingProduct(true)
+                const data = await apiClient.get(`sites/MLA/search?seller_id=${SELLER_ID}&shipping=${shipping}`)
+                set({ products: data?.results })
+                setLoadingProduct(false)
+                return data?.results
+            },
+            getSortProducts: async (sort) => {
+                const { SELLER_ID, setLoadingProduct } = get()
+                setLoadingProduct(true)
+                const data = await apiClient.get(`sites/MLA/search?seller_id=${SELLER_ID}&sort=${sort?.id}`)
+                set({ products: data?.results })
+                setLoadingProduct(false)
+                return data?.results
+            },
         }),
         {
             name: encrypt_data('products_storage'),
